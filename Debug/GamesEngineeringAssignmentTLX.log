@@ -1,13 +1,14 @@
 ﻿  CollisionSystem.cpp
 c:\users\krisr\developer\gamesengineeringassignmenttlx\collisionsystem.cpp(10): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-c:\users\krisr\developer\gamesengineeringassignmenttlx\collisionsystem.cpp(199): warning C4018: '<': signed/unsigned mismatch
-c:\users\krisr\developer\gamesengineeringassignmenttlx\collisionsystem.cpp(234): warning C4018: '<': signed/unsigned mismatch
+c:\users\krisr\developer\gamesengineeringassignmenttlx\collisionsystem.cpp(147): warning C4244: '-=': conversion from 'float' to 'int', possible loss of data
+c:\users\krisr\developer\gamesengineeringassignmenttlx\collisionsystem.cpp(263): warning C4018: '<': signed/unsigned mismatch
+c:\users\krisr\developer\gamesengineeringassignmenttlx\collisionsystem.cpp(298): warning C4018: '<': signed/unsigned mismatch
   Generating Code...
   Compiling...
   Utilities.cpp
 c:\users\krisr\developer\gamesengineeringassignmenttlx\utilities.cpp(21): warning C4244: 'return': conversion from '__int64' to 'long', possible loss of data
   GamesEngineeringAssignmentTLX.cpp
-c:\users\krisr\developer\gamesengineeringassignmenttlx\gamesengineeringassignmenttlx.cpp(183): warning C4018: '<': signed/unsigned mismatch
+c:\users\krisr\developer\gamesengineeringassignmenttlx\gamesengineeringassignmenttlx.cpp(185): warning C4018: '<': signed/unsigned mismatch
   Generating Code...
   GamesEngineeringAssignmentTLX.vcxproj -> C:\Users\krisr\Developer\GamesEngineeringAssignmentTLX\\GamesEngineeringAssignmentTLXDebug.exe
   GamesEngineeringAssignmentTLX.vcxproj -> C:\Users\krisr\Developer\GamesEngineeringAssignmentTLX\\GamesEngineeringAssignmentTLX.pdb (Full PDB)

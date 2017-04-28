@@ -99,7 +99,7 @@ void main()
     // camera set up
     ICamera* p_Cam = gp_Engine->CreateCamera (kFPS, 0.0f, 0.0f, -1000.0f);
     p_Cam->SetRotationSpeed (25.0f);
-    p_Cam->SetFarClip (KRCS::k_GenerationLimitY * 10.0f);
+    p_Cam->SetFarClip (std::fmaxf(KRCS::k_GenerationLimitY * 10.0f, 10000.0f));
     // create models
     
     // beams
@@ -114,9 +114,13 @@ void main()
     for (int i = 0; i < KRCS::k_CircleCount; i++)
     {
         pr_ModSpheres[i] = p_MshSphere->CreateModel ();
+        pr_ModSpheres[i]->Scale (p_Collision->mr_Circles[i].rad / 20.0f);
     }
 
 #endif
+
+    float simulationTime = 0.0f;
+
     /**** Game Loop ****/
     while (
 #ifdef ENGINE_TLX 
@@ -126,7 +130,7 @@ void main()
 #endif 
         && running)
     {
-        p_Collision->Run (PrintText);
+        p_Collision->Run (PrintText, simulationTime);
 
 
         // visual output in TLX
@@ -162,6 +166,8 @@ void main()
                     pr_ModBeams[i].first->RotateLocalX (current.angleX);
                     pr_ModBeams[i].first->RotateLocalZ (current.angleZ);
                     pr_ModBeams[i].first->ScaleY (KRCS::k_GenerationLimitY);
+                    pr_ModBeams[i].first->ScaleX (0.1f);
+                    pr_ModBeams[i].first->ScaleZ (0.1f);
 #else
                     pr_ModBeams[i].first = p_MshBeam->CreateModel (current.locX, current.locY, 0.0f);
                     pr_ModBeams[i].first->RotateLocalZ (current.angleZ);
@@ -223,7 +229,13 @@ void main()
         {
             gp_Engine->Stop ();
         }
+
+        // set the time for the simulation to either frame time or 60FPS
+        simulationTime = frameTime;
+#else
+        simulationTime = 1.0f / 60.0f;
 #endif
+
 
     }
 

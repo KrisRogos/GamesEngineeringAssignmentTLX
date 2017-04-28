@@ -20,6 +20,11 @@ namespace KRCS {
         float angleX;
 #endif
 
+        // direction vector
+        float vecX; 
+        float vecY;
+        float vecZ;
+
         // how long until this laser vanishes
         float lifeLeft = 0.0f;
 

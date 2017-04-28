@@ -53,6 +53,9 @@ namespace KRCS {
         uint_fast32_t range_Start;
         uint_fast32_t range_End;
         uint_fast8_t laser;
+
+        float best_distance = k_GenerationLimitX * 1000.0f ;
+        uint_fast32_t best_sphere = MAXUINT32;
     };
 
     struct SWorker
@@ -76,11 +79,7 @@ namespace KRCS {
 
         
 
-        const float k_VelociyLimitX = 50.0f; // positive velocity X limit, negative is calculated from this
-        const float k_VelociyLimitY = 50.0f; // positive velocity Y limit, negative is calculated from this
-#ifdef SIMULATION_3D 
-        const float k_VelociyLimitZ = 50.0f; // positive velocity Z limit, negative is calculated from this
-#endif
+        
 
         PRECISE_TIMER timeBegin;
         PRECISE_TIMER timeLastLaser;
