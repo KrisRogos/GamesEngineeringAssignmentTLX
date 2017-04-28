@@ -1,3 +1,5 @@
-﻿  GamesEngineeringAssignmentTLX.cpp
+﻿  CollisionSystem.cpp
+c:\users\krisr\developer\gamesengineeringassignmenttlx\collisionsystem.cpp(10): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+c:\users\krisr\developer\gamesengineeringassignmenttlx\collisionsystem.cpp(176): warning C4018: '<': signed/unsigned mismatch
   GamesEngineeringAssignmentTLX.vcxproj -> C:\Users\krisr\Developer\GamesEngineeringAssignmentTLX\\GamesEngineeringAssignmentTLXDebug.exe
   GamesEngineeringAssignmentTLX.vcxproj -> C:\Users\krisr\Developer\GamesEngineeringAssignmentTLX\\GamesEngineeringAssignmentTLX.pdb (Full PDB)

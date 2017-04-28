@@ -1,48 +1,191 @@
 // GamesEngineeringAssignmentTLX.cpp: A program using the TL-Engine
 
 #include <TL-Engine.h>	// TL-Engine include file and namespace
+#include "CollisionSystem.h"
 using namespace tle;
 
 /** KeyCodes **/
 // Game management
 const EKeyCode kg_KeyQuit = Key_Escape; // quit button
 
+// engine must be accessible to all functions
+I3DEngine* gp_Engine;
+
+#ifdef ENGINE_TLX
+// required for printing text in TLE
+struct SMsg {
+    std::string text;
+    KRCS::E_MessageType type;
+    float timer;
+
+    SMsg (std::string a_Text, KRCS::E_MessageType a_Type, float a_duration)
+    {
+        text = a_Text;
+        type = a_Type;
+        timer = a_duration;
+    }
+};
+std::vector<SMsg*> g_Messages;
+#endif
+
+void PrintText (std::string a_Message, KRCS::E_MessageType a_type, float a_duration = 2.5f)
+{
+#ifdef ENGINE_TLX
+
+    g_Messages.emplace_back (new SMsg (a_Message, a_type, a_duration));
+
+#endif
+
+#ifdef ENGINE_CONSOLE
+
+    HANDLE  hConsole;
+    hConsole = GetStdHandle (STD_OUTPUT_HANDLE);
+
+    switch (a_type)
+    {
+    default:
+        break;
+    case KRCS::E_MessageType::E_Info:
+        SetConsoleTextAttribute (hConsole, 15);
+        std::cout << a_Message << '\n';
+        break;
+    case KRCS::E_MessageType::E_Warning:
+        SetConsoleTextAttribute (hConsole, 14);
+        std::cout << a_Message << '\n';
+        SetConsoleTextAttribute (hConsole, 15);
+        break;
+    case KRCS::E_MessageType::E_Error:
+        SetConsoleTextAttribute (hConsole, 12);
+        std::cout << a_Message << '\n';
+        SetConsoleTextAttribute (hConsole, 15);
+        break;
+    case KRCS::E_MessageType::E_Crit:
+        SetConsoleTextAttribute (hConsole, 192);
+        std::cout << a_Message << '\n';
+        SetConsoleTextAttribute (hConsole, 15);
+        break;
+    }
+#endif
+}
 
 void main()
 {
     /**** Initialization ****/
+    bool running = true;
+
+    //// set up the collision simulation
+    KRCS::CollisionSystem* p_Collision = new KRCS::CollisionSystem ();
+    p_Collision->SetUP (PrintText);
+
     // Create a 3D engine (using TLX engine here) and open a window for it
-    I3DEngine* p_Engine = New3DEngine (kTLX);
-    p_Engine->StartWindowed ();
+#ifdef ENGINE_TLX
+    gp_Engine = New3DEngine (kTLX);
+    gp_Engine->StartWindowed ();
+    gp_Engine->StopMouseCapture ();
 
     // Add media folders
-    p_Engine->AddMediaFolder ("C:\\ProgramData\\TL-Engine\\Media");
+    gp_Engine->AddMediaFolder ("C:\\ProgramData\\TL-Engine\\Media");
+
+    uint_fast8_t fontSize = 18;
+    // prepare and load the font
+    IFont* p_Font = gp_Engine->LoadFont("Arial", fontSize);
+
+    // load meshes
+    IMesh* p_MshSPhere = gp_Engine->LoadMesh ("Sphere.x");
 
     /**** Scene set up ****/
-    // load meshes
-    IMesh* p_MshFloor = p_Engine->LoadMesh ("Floor.x"); // mesh of the floor
+    // camera set up
+    ICamera* p_Cam = gp_Engine->CreateCamera (kFPS, 0.0f, 0.0f, 0.0f);
+    p_Cam->SetRotationSpeed (25.0f);
 
-                                                        // create models
-
-                                                        // camera set up
-    ICamera* p_Cam = p_Engine->CreateCamera (kFPS, 0.0f, 0.0f, 0.0f);
-
-
-    /**** Game Loop ****/
-    while (p_Engine->IsRunning ())
+    // create models
+    std::array<IModel*, KRCS::k_CircleCount> pr_ModSpheres;
+    for (int i = 0; i < KRCS::k_CircleCount; i++)
     {
+        pr_ModSpheres[i] = p_MshSPhere->CreateModel ();
+    }
+
+#endif
+    /**** Game Loop ****/
+    while (
+#ifdef ENGINE_TLX 
+        gp_Engine->IsRunning ()
+#else
+        true
+#endif 
+        && running)
+    {
+        p_Collision->Run (PrintText);
+
+
+        // visual output in TLX
+#ifdef ENGINE_TLX
         // Draw the scene
-        p_Engine->DrawScene ();
+        gp_Engine->DrawScene ();
+        float frameTime = gp_Engine->Timer ();
+        gp_Engine->SetWindowCaption ("Delta: " + std::to_string (frameTime) + " | FPS: " + std::to_string (1 / frameTime));
+
+        // display the spheres
+        for (int i = 0; i < KRCS::k_CircleCount; i++)
+        {
+            auto current = p_Collision->mr_Circles[i];
+#ifdef SIMULATION_3D
+            pr_ModSpheres[i]->SetPosition (current.locX, current.locY, current.locZ);
+#else
+            pr_ModSpheres[i]->SetPosition (current.locX, current.locY, 0.0f);
+#endif
+        }
+
+        // display messages
+        for (int i = 0; i < g_Messages.size(); i++)
+        {
+            auto current = g_Messages[i];
+
+            current->timer -= frameTime;
+            if (current->timer < 0.0f)
+            {
+                g_Messages.erase (g_Messages.begin () + i);
+                i--;
+                delete current;
+            }
+            else
+            {
+                switch (current->type)
+                {
+                default:
+                    break;
+                case KRCS::E_MessageType::E_Info:
+                    p_Font->Draw (current->text, 11, 11 + i * fontSize, 0xff000000);
+                    p_Font->Draw (current->text, 10, 10 + i * fontSize, 0xffeeeeee);
+                    break;
+                case KRCS::E_MessageType::E_Warning:
+                    p_Font->Draw (current->text, 11, 11 + i * fontSize, 0xff000000);
+                    p_Font->Draw (current->text, 10, 10 + i * fontSize, 0xffffff00);
+                    break;
+                case KRCS::E_MessageType::E_Error:
+                    p_Font->Draw (current->text, 11, 11 + i * fontSize, 0xff000000);
+                    p_Font->Draw (current->text, 10, 10 + i * fontSize, 0xffff8800);
+                    break;
+                case KRCS::E_MessageType::E_Crit:
+                    p_Font->Draw (current->text, 11, 11 + i * fontSize, 0xff000000);
+                    p_Font->Draw (current->text, 10, 10 + i * fontSize, 0xffff0000);
+                    break;
+                }
+            }
+
+        }
 
         // stop the game
-        if (p_Engine->KeyHit (kg_KeyQuit))
+        if (gp_Engine->KeyHit (kg_KeyQuit))
         {
-            p_Engine->Stop ();
+            gp_Engine->Stop ();
         }
+#endif
+
     }
 
     /**** Clean up ****/
 
     // Delete the 3D engine now we are finished with it
-    p_Engine->Delete ();
+    gp_Engine->Delete ();
 }
