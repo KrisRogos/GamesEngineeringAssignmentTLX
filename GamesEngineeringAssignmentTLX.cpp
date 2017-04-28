@@ -85,24 +85,35 @@ void main()
 
     // Add media folders
     gp_Engine->AddMediaFolder ("C:\\ProgramData\\TL-Engine\\Media");
+    gp_Engine->AddMediaFolder ("Media");
 
     uint_fast8_t fontSize = 18;
     // prepare and load the font
     IFont* p_Font = gp_Engine->LoadFont("Arial", fontSize);
 
     // load meshes
-    IMesh* p_MshSPhere = gp_Engine->LoadMesh ("Sphere.x");
+    IMesh* p_MshBeam = gp_Engine->LoadMesh ("LaserBeam.x");
+    IMesh* p_MshSphere = gp_Engine->LoadMesh ("Sphere.x");
 
     /**** Scene set up ****/
     // camera set up
-    ICamera* p_Cam = gp_Engine->CreateCamera (kFPS, 0.0f, 0.0f, 0.0f);
+    ICamera* p_Cam = gp_Engine->CreateCamera (kFPS, 0.0f, 0.0f, -1000.0f);
     p_Cam->SetRotationSpeed (25.0f);
-
+    p_Cam->SetFarClip (KRCS::k_GenerationLimitY * 10.0f);
     // create models
+    
+    // beams
+    std::array<std::pair<IModel*, bool>, KRCS::k_MaxBeams> pr_ModBeams;
+    for (int i = 0; i < KRCS::k_MaxBeams; i++)
+    {
+        pr_ModBeams[i].second = false;
+    }
+    
+    // spheres
     std::array<IModel*, KRCS::k_CircleCount> pr_ModSpheres;
     for (int i = 0; i < KRCS::k_CircleCount; i++)
     {
-        pr_ModSpheres[i] = p_MshSPhere->CreateModel ();
+        pr_ModSpheres[i] = p_MshSphere->CreateModel ();
     }
 
 #endif
@@ -134,6 +145,38 @@ void main()
 #else
             pr_ModSpheres[i]->SetPosition (current.locX, current.locY, 0.0f);
 #endif
+        }
+
+        // display the lasers
+        for (int i = 0; i < KRCS::k_MaxBeams; i++)
+        {
+            auto& current = p_Collision->mr_Lasers[i];
+            // check if the laser is active
+            if (current.active)
+            {
+                // make a model for it if needed
+                if (!pr_ModBeams[i].second)
+                {
+#ifdef SIMULATION_3D
+                    pr_ModBeams[i].first = p_MshBeam->CreateModel (current.locX, current.locY, current.locZ);
+                    pr_ModBeams[i].first->RotateLocalX (current.angleX);
+                    pr_ModBeams[i].first->RotateLocalZ (current.angleZ);
+                    pr_ModBeams[i].first->ScaleY (KRCS::k_GenerationLimitY);
+#else
+                    pr_ModBeams[i].first = p_MshBeam->CreateModel (current.locX, current.locY, 0.0f);
+                    pr_ModBeams[i].first->RotateLocalZ (current.angleZ);
+                    pr_ModBeams[i].first->ScaleY (KRCS::k_GenerationLimitY);
+#endif
+                    pr_ModBeams[i].second = true;
+                }
+
+            }
+            // otherwise make sure to not keep it's model
+            else if (pr_ModBeams[i].second)
+            {
+                p_MshBeam->RemoveModel (pr_ModBeams[i].first);
+                pr_ModBeams[i].second = false;
+            }
         }
 
         // display messages

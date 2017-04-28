@@ -10,6 +10,7 @@
 
 #include "Utilities.h"
 #include "Circle.h"
+#include "Laser.h"
 
 // Namespace for the project: Kris Rogos Collision System
 namespace KRCS {
@@ -45,15 +46,22 @@ namespace KRCS {
 
     };
 
-    struct SMoveWorker
+    struct SBeamTask
+    {
+        bool complete = true;
+
+        uint_fast32_t range_Start;
+        uint_fast32_t range_End;
+        uint_fast8_t laser;
+    };
+
+    struct SWorker
     {
         std::thread thread;
         std::condition_variable taskReady;
         std::mutex lock;
 
         bool busy;
-
-        bool (*fn)(uint_fast8_t a_thread);
     };
 
     class CollisionSystem
@@ -61,15 +69,12 @@ namespace KRCS {
     public:
         
         std::array<Circle, k_CircleCount> mr_Circles;
+        std::array<Laser, k_MaxBeams> mr_Lasers;
 
     protected:
         std::array<Circle, k_CircleCount> mr_CirclesLaserBuffer;
 
-        const float k_GenerationLimitX = 1000.0f; // positive world size in X, negative is calculated from this
-        const float k_GenerationLimitY = 1000.0f; // positive world size in Y, negative is calculated from this
-#ifdef SIMULATION_3D 
-        const float k_GenerationLimitZ = 1000.0f; // positive world size in Z, negative is calculated from this
-#endif
+        
 
         const float k_VelociyLimitX = 50.0f; // positive velocity X limit, negative is calculated from this
         const float k_VelociyLimitY = 50.0f; // positive velocity Y limit, negative is calculated from this
@@ -83,8 +88,8 @@ namespace KRCS {
         E_SimulationStatus m_SimStat;
         E_ResolverStatus m_ResStat;
 
-        std::array<SMoveWorker, k_AnimWorkers> mr_AnimWorkers;
-        std::pair<SMoveWorker, SMoveTask> mr_MoveWorkers[k_AnimWorkers];
+        std::pair<SWorker, SMoveTask> mr_MoveWorkers[k_MoveWorkers];
+        std::pair<SWorker, SBeamTask> mr_BeamWorkers[k_MoveWorkers];
 
     public:
         CollisionSystem ();

@@ -48,7 +48,7 @@ namespace KRCS {
         }
 
         // create worker threads
-        for (int i = 0; i < k_AnimWorkers; i++)
+        for (int i = 0; i < k_MoveWorkers; i++)
         {
             mr_MoveWorkers[i].first.thread = std::thread (&CollisionSystem::ProcessMovement, this, i);
 
@@ -73,6 +73,16 @@ namespace KRCS {
                 fnp_Print (std::to_string(GetDurationLng (timeBegin, timeStart)/TIME_SECOND) + ": Laser fired", E_MessageType::E_Info, 2.5f);
                 timeLastLaser = std::chrono::high_resolution_clock::now ();
 
+                // create the laser
+                mr_Lasers[0].active = true;
+                mr_Lasers[0].locX = RandomFloat (-k_GenerationLimitX, -k_GenerationLimitX);
+                mr_Lasers[0].locY = RandomFloat (-k_GenerationLimitY, -k_GenerationLimitY);
+                mr_Lasers[0].locZ = RandomFloat (-k_GenerationLimitZ, -k_GenerationLimitZ);
+                mr_Lasers[0].angleX = RandomFloat (-90, 90);
+                mr_Lasers[0].angleZ = RandomFloat (-90, 90);
+
+                mr_Lasers[0].lifeLeft = 0.5f;
+
                 // distribute work to idle threads, first few are reserved for animation so don't use them
                 /*for (int i = k_AnimWorkers; i < k_WorkerCount; i++)
                 {
@@ -80,9 +90,23 @@ namespace KRCS {
                 }*/
             }
 
+            // modify laser timers
+            for (int i = 0; i < k_MaxBeams; i++)
+            {
+                if (mr_Lasers[i].active)
+                {
+                    mr_Lasers[i].lifeLeft -= a_DeltaTime;
+
+                    if (mr_Lasers[i].lifeLeft <= 0.0f)
+                    {
+                        mr_Lasers[i].active = false;
+                    }
+                }
+            }
+
             //--- animate spheres ---
             // send the task
-            for (int i = 0; i < k_AnimWorkers; i++)
+            for (int i = 0; i < k_MoveWorkers; i++)
             {
                 auto& worker = mr_MoveWorkers[i].first;
                 std::unique_lock<std::mutex> lk (worker.lock);
@@ -101,7 +125,7 @@ namespace KRCS {
             }
 
 
-            for (int i = 0; i < k_AnimWorkers; i++)
+            for (int i = 0; i < k_MoveWorkers; i++)
             {
                 auto& worker = mr_MoveWorkers[i].first;
                 auto& task = mr_MoveWorkers[i].second;
@@ -195,7 +219,33 @@ namespace KRCS {
 
     bool CollisionSystem::ProcessLaserBeam (uint_fast8_t a_thread)
     {
-        return false;
+        auto& worker = mr_BeamWorkers[a_thread].first;
+        auto& task = mr_BeamWorkers[a_thread].second;
+
+        while (true)
+        {
+            // wait
+            {
+                std::unique_lock<std::mutex> lk (worker.lock);
+                worker.taskReady.wait (lk, [&]() { return !task.complete;  });
+            }
+
+            // for all circles or spheres
+            for (int i = task.range_Start; i < task.range_End; i++)
+            {
+
+            }
+
+            // send the return signal
+            {
+                std::unique_lock<std::mutex> lk (worker.lock);
+                worker.busy = false;
+                task.complete = true;
+                worker.taskReady.notify_one ();
+            }
+        }
+
+        return true;
     }
 
 }
