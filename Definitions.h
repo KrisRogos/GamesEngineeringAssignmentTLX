@@ -20,10 +20,10 @@ namespace KRCS {
 #define TIME_SECOND 1000000
 #define TIME_STR " microseconds"
 
-    const uint_fast32_t k_CircleCount = 50; // number of circles to be simulated
+    const uint_fast32_t k_CircleCount = 500; // number of circles to be simulated
     const uint_fast32_t k_CircleLotSize = 50; // number of circles per thread
     const uint_fast8_t k_BeamWorkers = 8; // amount of workers for beam resolution only
-    const uint_fast8_t k_AnimWorkers = 1; // amount of workers for animation only
+    const uint_fast8_t k_AnimWorkers = 10; // amount of workers for animation only
 
     enum class E_MessageType : uint_fast8_t
     {

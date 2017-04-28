@@ -35,19 +35,24 @@ namespace KRCS {
         E_Complete, // worker has completed it's current task, data is ready for offloading
     };
 
-    struct SWorker
+    struct SMoveTask
     {
-        std::thread thread;
-        std::condition_variable conditional;
-        std::mutex lock;
-
         bool complete = true;
-        bool readyToStart = false;
 
-        E_WorkerStatus state;
         float deltaTime;
         uint_fast32_t range_Start;
         uint_fast32_t range_End;
+
+    };
+
+    struct SMoveWorker
+    {
+        std::thread thread;
+        std::condition_variable taskReady;
+        std::mutex lock;
+
+        bool busy;
+
         bool (*fn)(uint_fast8_t a_thread);
     };
 
@@ -78,7 +83,8 @@ namespace KRCS {
         E_SimulationStatus m_SimStat;
         E_ResolverStatus m_ResStat;
 
-        std::array<SWorker, k_AnimWorkers> mr_AnimWorkers;
+        std::array<SMoveWorker, k_AnimWorkers> mr_AnimWorkers;
+        std::pair<SMoveWorker, SMoveTask> mr_MoveWorkers[k_AnimWorkers];
 
     public:
         CollisionSystem ();

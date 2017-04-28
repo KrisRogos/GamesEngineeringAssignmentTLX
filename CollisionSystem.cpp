@@ -1,5 +1,5 @@
 #include "CollisionSystem.h"
-
+#include <assert.h>
 
 // Namespace for the project: Kris Rogos Collision System
 namespace KRCS {
@@ -50,7 +50,9 @@ namespace KRCS {
         // create worker threads
         for (int i = 0; i < k_AnimWorkers; i++)
         {
-            mr_AnimWorkers[i].thread = std::thread (&CollisionSystem::WorkerMain, this, i);
+            mr_MoveWorkers[i].first.thread = std::thread (&CollisionSystem::ProcessMovement, this, i);
+
+            //mr_AnimWorkers[i].thread = std::thread (&CollisionSystem::WorkerMain, this, i);
         }
 
         timeLastLaser = GetNow ();
@@ -79,47 +81,34 @@ namespace KRCS {
             }
 
             //--- animate spheres ---
-            // how much work was assigned already
-            uint_fast8_t assigned = 0;
-
-            // distribute work to all idle threads
-            for (int i = 0; i < k_AnimWorkers && assigned * k_CircleLotSize < k_CircleCount; i++)
+            // send the task
+            for (int i = 0; i < k_AnimWorkers; i++)
             {
-                std::unique_lock<std::mutex> l (mr_AnimWorkers[i].lock, std::defer_lock);
-                // check worker status
-                //if (!mr_AnimWorkers[i].readyToStart)
+                auto& worker = mr_MoveWorkers[i].first;
+                std::unique_lock<std::mutex> lk (worker.lock);
+                if (!worker.busy)
                 {
-                    // prepare the work
-                    mr_AnimWorkers[i].deltaTime = a_DeltaTime;
-                    mr_AnimWorkers[i].range_Start = assigned * k_CircleLotSize;
-                    mr_AnimWorkers[i].range_End = ++assigned * k_CircleLotSize;
-                    mr_AnimWorkers[i].complete = false;
-                    //mr_AnimWorkers[i].readyToStart = true;
+                    worker.busy = true;
+                    auto& task = mr_MoveWorkers[i].second;
 
-                    //l.unlock ();
+                    task.complete = false;
+                    task.deltaTime = a_DeltaTime;
+                    task.range_Start = k_CircleLotSize * i;
+                    task.range_End = k_CircleLotSize * (i + 1);
 
-                    // notify the worker
-                    mr_AnimWorkers[i].conditional.notify_one ();
-                }
-                //else
-                {
-                    //l.unlock ();
+                    worker.taskReady.notify_one ();
                 }
             }
 
-            // wait for the animation to finish
+
             for (int i = 0; i < k_AnimWorkers; i++)
             {
-                auto& worker = mr_AnimWorkers[i];
+                auto& worker = mr_MoveWorkers[i].first;
+                auto& task = mr_MoveWorkers[i].second;
 
-                {
-                    std::unique_lock<std::mutex> l (worker.lock);
-                    worker.conditional.wait (l, [&]() { return worker.complete;  });
-                    
-
-                    //l.unlock ();
-                }
-                
+                // wait until ready
+                std::unique_lock<std::mutex> lk (worker.lock);
+                worker.taskReady.wait (lk, [&]() { return task.complete; });
             }
             
             fnp_Print ("Done", E_MessageType::E_Info, 5.0f);
@@ -136,50 +125,69 @@ namespace KRCS {
     
     void CollisionSystem::WorkerMain (uint_fast8_t a_thread)
     {
-        auto& worker = mr_AnimWorkers[a_thread];
-        while (true)
-        {
-            // wait until prompted to do work
-            {
-                std::unique_lock<std::mutex> l (worker.lock);
-                worker.conditional.wait (l, [&]() { std::cout << "Wait ";  return !worker.complete;  });
-                std::cout << "The wait is over";
-                /*worker.complete = false;
-                l.unlock ();*/
-            }
+        //auto& worker = mr_MoveWorkers[a_thread].first;
+        //auto& task = mr_MoveWorkers[a_thread].second;
+        //while (true)
+        //{
+        //    // wait until prompted to do work
+        //    {
+        //        std::unique_lock<std::mutex> l (worker.lock);
+        //        worker.taskReady.wait (l, [&]() { std::cout << "Wait ";  return !worker.complete;  });
+        //        std::cout << "The wait is over";
+        //        /*worker.complete = false;
+        //        l.unlock ();*/
+        //    }
 
-            // carry out the task
-            std::cout << "Work start ";
-            worker.fn (a_thread);
-            std::cout << "Work end ";
+        //    // carry out the task
+        //    std::cout << "Work start ";
+        //    worker.fn (a_thread);
+        //    std::cout << "Work end ";
 
-            // notify main thread of completion
-            {
-                std::unique_lock<std::mutex> l (worker.lock);
+        //    // notify main thread of completion
+        //    {
+        //        std::unique_lock<std::mutex> l (worker.lock);
 
-                //worker.readyToStart = false;
-                worker.complete = true;
-                
-                std::cout << "Release ";
+        //        //worker.readyToStart = false;
+        //        worker.complete = true;
+        //        
+        //        std::cout << "Release ";
 
-                //l.unlock ();
-                worker.conditional.notify_one ();
-            }
-        }
+        //        //l.unlock ();
+        //        worker.taskReady.notify_one ();
+        //    }
+        //}
     }
+
     bool CollisionSystem::ProcessMovement (uint_fast8_t a_thread)
     {
-        auto& worker = mr_AnimWorkers[a_thread];
-        //std::cout << "test";
+        auto& worker = mr_MoveWorkers[a_thread].first;
+        auto& task = mr_MoveWorkers[a_thread].second;
 
-        // for all circles or spheres
-        for (int i = worker.range_Start; i < worker.range_End; i++)
+        while (true)
         {
-            mr_Circles[i].locX += mr_Circles[i].velocityX * worker.deltaTime;
-            mr_Circles[i].locY += mr_Circles[i].velocityY * worker.deltaTime;
-#ifdef SIMULATION_3D
-            mr_Circles[i].locZ += mr_Circles[i].velocityZ * worker.deltaTime;
-#endif
+            // wait
+            {
+                std::unique_lock<std::mutex> lk (worker.lock);
+                worker.taskReady.wait (lk, [&]() { return !task.complete;  });
+            }
+
+            // for all circles or spheres
+            for (int i = task.range_Start; i < task.range_End; i++)
+            {
+                mr_Circles[i].locX += mr_Circles[i].velocityX * task.deltaTime;
+                mr_Circles[i].locY += mr_Circles[i].velocityY * task.deltaTime;
+    #ifdef SIMULATION_3D
+                mr_Circles[i].locZ += mr_Circles[i].velocityZ * task.deltaTime;
+    #endif
+            }
+
+            // send the return signal
+            {
+                std::unique_lock<std::mutex> lk (worker.lock);
+                worker.busy = false;
+                task.complete = true;
+                worker.taskReady.notify_one ();
+            }
         }
 
         return true;
