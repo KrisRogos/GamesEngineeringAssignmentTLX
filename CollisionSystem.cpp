@@ -92,10 +92,10 @@ namespace KRCS {
                 if (laser < k_MaxBeams)
                 {
                     // create the laser
-                    mr_Lasers[laser].locX = RandomFloat (-k_GenerationLimitX, k_GenerationLimitX);
-                    mr_Lasers[laser].locY = RandomFloat (-k_GenerationLimitY, k_GenerationLimitY);
+                    mr_Lasers[laser].startX = RandomFloat (-k_GenerationLimitX, k_GenerationLimitX);
+                    mr_Lasers[laser].startY = RandomFloat (-k_GenerationLimitY, k_GenerationLimitY);
 #ifdef SIMULATION_3D
-                    mr_Lasers[laser].locZ = RandomFloat (-k_GenerationLimitZ, k_GenerationLimitZ);
+                    mr_Lasers[laser].startZ = RandomFloat (-k_GenerationLimitZ, k_GenerationLimitZ);
                     mr_Lasers[laser].angleX = RandomFloat (-180, 180);
 #endif
                     mr_Lasers[laser].angleZ = RandomFloat (-180, 180);
@@ -323,10 +323,10 @@ namespace KRCS {
                 auto& circle = mr_Circles[i];
                 auto& laser = mr_Lasers[task.laser];
                 // calculate vector to from laser origin to sphere
-                float vectX = std::fabsf(laser.locX - circle.locX);
-                float vectY = std::fabsf(laser.locY - circle.locY);
+                float vectX = std::fabsf(laser.startX - circle.locX);
+                float vectY = std::fabsf(laser.startY - circle.locY);
 #ifdef SIMULATION_3D
-                float vectZ = std::fabsf(laser.locZ - circle.locZ);
+                float vectZ = std::fabsf(laser.startZ - circle.locZ);
 #endif
                 // check if this is the new closest sphere
 #ifdef SIMULATION_3D

@@ -4,7 +4,7 @@ CollisionSystem.cpp(164): warning C4244: '-=': conversion from 'float' to 'int',
 CollisionSystem.cpp(286): warning C4018: '<': signed/unsigned mismatch
 CollisionSystem.cpp(321): warning C4018: '<': signed/unsigned mismatch
   GamesEngineeringAssignmentTLX.cpp
-GamesEngineeringAssignmentTLX.cpp(189): warning C4018: '<': signed/unsigned mismatch
+GamesEngineeringAssignmentTLX.cpp(222): warning C4018: '<': signed/unsigned mismatch
   Utilities.cpp
 Utilities.cpp(21): warning C4244: 'return': conversion from '__int64' to 'long', possible loss of data
   Generating code

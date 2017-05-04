@@ -68,6 +68,36 @@ void PrintText (std::string a_Message, KRCS::E_MessageType a_type, float a_durat
 #endif
 }
 
+// Based on the function provided my Laurent Noel
+// Orient and stretch LineModel to connect the given points. Pass line width (world units) and camera
+// Use Line.x for the line model for correct results. Create a model for each line required
+void CreateLine (IModel* LineModel, float x1, float y1, float z1, float x2, float y2, float z2, float lineWidth, ICamera* camera)
+{
+    float xCam = camera->GetX ();
+    float yCam = camera->GetY ();
+    float zCam = camera->GetZ ();
+
+    float xLnCent = (x1 + x2) * 0.5f;
+    float yLnCent = (y1 + y2) * 0.5f;
+    float zLnCent = (z1 + z2) * 0.5f;
+
+    float xUp;
+    float yUp;
+    float zUp;
+
+    float lenght = KRCS::VectorLenght (std::fabsf(x1 - x2), std::fabsf(y1 - y2), std::fabsf(z1 - z2));
+
+    KRCS::VectorNorm (xCam - xLnCent, yCam - yLnCent, zCam - zLnCent, xUp, yUp, zUp);
+
+    KRCS::SMatirx4 lineMtx = KRCS::FaceTarget (x1, y1, z1, x2, y2, z2, xUp, yUp, zUp);
+
+    lineMtx.ScaleX (lineWidth);
+    lineMtx.ScaleY (0.0f);
+    lineMtx.ScaleZ (lenght);
+
+    LineModel->SetMatrix (&lineMtx.data[0]);
+}
+
 void main()
 {
     /**** Initialization ****/
@@ -94,6 +124,7 @@ void main()
     // load meshes
     IMesh* p_MshBeam = gp_Engine->LoadMesh ("LaserBeam.x");
     IMesh* p_MshSphere = gp_Engine->LoadMesh ("Sphere.x");
+    IMesh* p_MshLine = gp_Engine->LoadMesh ("Line.x");
 
     /**** Scene set up ****/
     // camera set up
@@ -116,6 +147,8 @@ void main()
         pr_ModSpheres[i] = p_MshSphere->CreateModel ();
         pr_ModSpheres[i]->Scale (p_Collision->mr_Circles[i].rad / 20.0f);
     }
+
+    IModel* p_ModLine = p_MshLine->CreateModel ();
 
 #endif
 
@@ -162,7 +195,7 @@ void main()
                 if (!pr_ModBeams[i].second)
                 {
 #ifdef SIMULATION_3D
-                    pr_ModBeams[i].first = p_MshBeam->CreateModel (current.locX, current.locY, current.locZ);
+                    pr_ModBeams[i].first = p_MshBeam->CreateModel (current.startX, current.startY, current.startZ);
                     pr_ModBeams[i].first->RotateLocalX (current.angleX);
                     pr_ModBeams[i].first->RotateLocalZ (current.angleZ);
                     pr_ModBeams[i].first->ScaleY (KRCS::k_GenerationLimitY);

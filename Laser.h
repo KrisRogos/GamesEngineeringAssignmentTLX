@@ -8,10 +8,16 @@ namespace KRCS {
         bool active = false;
 
         // position
-        float locX;
-        float locY;
+        float startX;
+        float startY;
 #ifdef SIMULATION_3D
-        float locZ;
+        float startZ;
+#endif
+
+        float endX;
+        float endY;
+#ifdef SIMULATION_3D
+        float endZ;
 #endif
 
         // angle - Y axis would just cause a spin so is not needed, in 2D (XY) simulation the axis rotates only on the Z axis
