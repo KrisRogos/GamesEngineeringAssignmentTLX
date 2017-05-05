@@ -114,7 +114,6 @@ void main()
     gp_Engine->StopMouseCapture ();
 
     // Add media folders
-    gp_Engine->AddMediaFolder ("C:\\ProgramData\\TL-Engine\\Media");
     gp_Engine->AddMediaFolder ("Media");
 
     uint_fast8_t fontSize = 18;
@@ -122,8 +121,7 @@ void main()
     IFont* p_Font = gp_Engine->LoadFont("Arial", fontSize);
 
     // load meshes
-    IMesh* p_MshBeam = gp_Engine->LoadMesh ("LaserBeam.x");
-    IMesh* p_MshSphere = gp_Engine->LoadMesh ("Sphere.x");
+    IMesh* p_MshSphere = gp_Engine->LoadMesh ("sphere.x");
     IMesh* p_MshLine = gp_Engine->LoadMesh ("Line.x");
 
     /**** Scene set up ****/
@@ -131,24 +129,24 @@ void main()
     ICamera* p_Cam = gp_Engine->CreateCamera (kFPS, 0.0f, 0.0f, -1000.0f);
     p_Cam->SetRotationSpeed (25.0f);
     p_Cam->SetFarClip (std::fmaxf(KRCS::k_GenerationLimitY * 10.0f, 10000.0f));
-    // create models
-    
-    // beams
-    std::array<std::pair<IModel*, bool>, KRCS::k_MaxBeams> pr_ModBeams;
-    for (int i = 0; i < KRCS::k_MaxBeams; i++)
-    {
-        pr_ModBeams[i].second = false;
-    }
+
+    //-- create models
     
     // spheres
-    std::array<IModel*, KRCS::k_CircleCount> pr_ModSpheres;
+    std::array<std::pair<IModel*, bool>, KRCS::k_CircleCount> pr_ModSpheres;
     for (int i = 0; i < KRCS::k_CircleCount; i++)
     {
-        pr_ModSpheres[i] = p_MshSphere->CreateModel ();
-        pr_ModSpheres[i]->Scale (p_Collision->mr_Circles[i].rad / 20.0f);
+        pr_ModSpheres[i].first = p_MshSphere->CreateModel ();
+        pr_ModSpheres[i].first->Scale (p_Collision->mr_Circles[i].rad / 5.0f); // physical size adjusted for better presentation
+        pr_ModSpheres[i].second = true;
     }
 
-    IModel* p_ModLine = p_MshLine->CreateModel ();
+    // lasers
+    std::array<std::pair<IModel*, bool>, KRCS::k_MaxBeams> pr_ModLasers;
+    for (uint_fast8_t i; i < KRCS::k_MaxBeams; i++)
+    {
+        pr_ModLasers[i].second = false;
+    }
 
 #endif
 
@@ -177,11 +175,23 @@ void main()
         for (int i = 0; i < KRCS::k_CircleCount; i++)
         {
             auto current = p_Collision->mr_Circles[i];
+
+            // is alive
+            if (current.life > 0 && pr_ModSpheres[i].second)
+            {
 #ifdef SIMULATION_3D
-            pr_ModSpheres[i]->SetPosition (current.locX, current.locY, current.locZ);
+                pr_ModSpheres[i].first->SetPosition (current.locX, current.locY, current.locZ);
 #else
-            pr_ModSpheres[i]->SetPosition (current.locX, current.locY, 0.0f);
+                pr_ModSpheres[i].first->SetPosition (current.locX, current.locY, 0.0f);
 #endif
+            }
+            // should it be destroyed
+            else if (current.life <= 0 && pr_ModSpheres[i].second)
+            {
+                p_MshSphere->RemoveModel (pr_ModSpheres[i].first);
+                pr_ModSpheres[i].second = false;
+            }
+
         }
 
         // display the lasers
@@ -192,29 +202,25 @@ void main()
             if (current.active)
             {
                 // make a model for it if needed
-                if (!pr_ModBeams[i].second)
+                if (!pr_ModLasers[i].second)
                 {
+                    pr_ModLasers[i].first = p_MshLine->CreateModel ();
 #ifdef SIMULATION_3D
-                    pr_ModBeams[i].first = p_MshBeam->CreateModel (current.startX, current.startY, current.startZ);
-                    pr_ModBeams[i].first->RotateLocalX (current.angleX);
-                    pr_ModBeams[i].first->RotateLocalZ (current.angleZ);
-                    pr_ModBeams[i].first->ScaleY (KRCS::k_GenerationLimitY);
-                    pr_ModBeams[i].first->ScaleX (0.1f);
-                    pr_ModBeams[i].first->ScaleZ (0.1f);
+                    CreateLine (pr_ModLasers[i].first, current.startX, current.startY, current.startZ, current.endX, current.endY, current.endZ, 5.0f, p_Cam);
+
 #else
-                    pr_ModBeams[i].first = p_MshBeam->CreateModel (current.locX, current.locY, 0.0f);
-                    pr_ModBeams[i].first->RotateLocalZ (current.angleZ);
-                    pr_ModBeams[i].first->ScaleY (KRCS::k_GenerationLimitY);
+                    CreateLine (pr_ModLasers[i].first, current.startX, current.startY, 0.0f, current.endX, current.endY, 0.0f, 5.0f, p_Cam);
 #endif
-                    pr_ModBeams[i].second = true;
+
+                    pr_ModLasers[i].second = true;
                 }
 
             }
             // otherwise make sure to not keep it's model
-            else if (pr_ModBeams[i].second)
+            else if (pr_ModLasers[i].second)
             {
-                p_MshBeam->RemoveModel (pr_ModBeams[i].first);
-                pr_ModBeams[i].second = false;
+                p_MshLine->RemoveModel (pr_ModLasers[i].first);
+                pr_ModLasers[i].second = false;
             }
         }
 

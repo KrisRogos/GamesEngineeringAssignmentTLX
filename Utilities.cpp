@@ -122,39 +122,77 @@ namespace KRCS
         return SMatirx4 (XaxisX, YaxisX, ZaxisX, XaxisY, YaxisY, ZaxisY, XaxisZ, YaxisZ, ZaxisZ, a_X1, a_Y1, a_Z1);
     }
 
-    // project vector 1 onto vector 2, store result in vector o
-    void VectorProjectOnto (float a_X1, float a_Y1, float a_Z1, float a_X2, float a_Y2, float a_Z2, float & o_X, float & o_Y, float & o_Z)
+    // project vector 1 onto vector 2, store result in vector o, s and e are the starting and end positions of the 2nd vector
+    void VectorProjectOnto (float a_X1, float a_Y1, float a_Z1, float a_X2, float a_Y2, float a_Z2, float a_sX, float a_sY, float a_sZ, float a_eX, float a_eY, float a_eZ, float & o_X, float & o_Y, float & o_Z)
     {
-        float dp1 = VectorDot (a_X2, a_Y2, a_Z2, a_X2, a_Y2, a_Z2);
-        if (dp1 > 0.0f)
+        float nX;
+        float nY;
+        float nZ;
+        // get normal vector of the laser beam
+        VectorNorm (a_X2, a_Y2, a_Z2, nX, nY, nZ);
+
+        // get the length of the projected vector
+        float projectionLenght = VectorDot (a_X1, a_Y1, a_Z1, nX, nY, nZ);
+
+        // handle edge cases
+        if (projectionLenght < 0)
         {
-            float dp2 = VectorDot (a_X1, a_Y1, a_Z1, a_X2, a_Y2, a_Z2);
-            float div = dp2 / dp1;
-            o_X = a_X2 * div;
-            o_Y = a_Y2 * div;
-            o_Z = a_Z2 * div;
+            o_X = a_sX;
+            o_Y = a_sY;
+            o_Z = a_sZ;
             return;
         }
-        o_X = 0.0f;
-        o_Y = 0.0f;
-        o_Z = 0.0f;
+        else if (projectionLenght > VectorLenght (a_X2, a_Y2, a_Z2))
+        {
+            o_X = a_eX;
+            o_Y = a_eY;
+            o_Z = a_eZ;
+            return;
+        }
+
+        // calculate the projected vector
+        float pX = projectionLenght * nX;
+        float pY = projectionLenght * nY;
+        float pZ = projectionLenght * nZ;
+
+        o_X = a_sX + pX;
+        o_Y = a_sY + pY;
+        o_Z = a_sZ + pZ;
         return;
     }
 
-    // project vector 1 onto vector 2, store result in vector o
-    void VectorProjectOnto (float a_X1, float a_Y1, float a_X2, float a_Y2, float & o_X, float & o_Y)
+    // project vector 1 onto vector 2, store result in vector o, s and e are the starting and end positions of the 2nd vector
+    void VectorProjectOnto (float a_X1, float a_Y1, float a_X2, float a_Y2, float a_sX, float a_sY, float a_eX, float a_eY, float & o_X, float & o_Y)
     {
-        float dp1 = VectorDot (a_X2, a_Y2, a_X2, a_Y2);
-        if (dp1 > 0.0f)
+
+        float nX;
+        float nY;
+        // get normal vector of the laser beam
+        VectorNorm (a_X2, a_Y2, nX, nY);
+
+        // get the length of the projected vector
+        float projectionLenght = VectorDot (a_X1, a_Y1, nX, nY);
+
+        // handle edge cases
+        if (projectionLenght < 0)
         {
-            float dp2 = VectorDot (a_X1, a_Y1, a_X2, a_Y2);
-            float div = dp2 / dp1;
-            o_X = a_X2 * div;
-            o_Y = a_Y2 * div;
+            o_X = a_sX;
+            o_Y = a_sY;
             return;
         }
-        o_X = 0.0f;
-        o_Y = 0.0f;
+        else if (projectionLenght > VectorLenght (a_X2, a_Y2))
+        {
+            o_X = a_eX;
+            o_Y = a_eY;
+            return;
+        }
+
+        // calculate the projected vector
+        float pX = projectionLenght * nX;
+        float pY = projectionLenght * nY;
+
+        o_X = a_sX + pX;
+        o_Y = a_sY + pY;
         return;
     }
 

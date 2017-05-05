@@ -99,7 +99,6 @@ namespace KRCS {
         // runs a single frame of the simulation, if no delta time specified 60FPS assumed
         void Run (void (*fnp_Print)(std::string a_Message, E_MessageType a_Type, float a_duration), float a_DeltaTime = 1.0f/60.0f);
 
-        void WorkerMain (uint_fast8_t a_thread);
         bool ProcessMovement (uint_fast8_t a_thread);
         bool ProcessLaserBeam (uint_fast8_t a_thread);
     };

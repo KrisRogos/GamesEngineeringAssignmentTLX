@@ -45,7 +45,7 @@ namespace KRCS {
     bool VectorIsZero (float a_X, float a_Y, float a_Z);
     bool VectorIsZero (float a_X, float a_Y);
 
-    // project vector 1 onto vector 2, store result in vector o
-    void VectorProjectOnto (float a_X1, float a_Y1, float a_Z1, float a_X2, float a_Y2, float a_Z2, float & o_X, float & o_Y, float & o_Z);
-    void VectorProjectOnto (float a_X1, float a_Y1, float a_X2, float a_Y2, float & o_X, float & o_Y);
+    // project vector 1 onto vector 2, store result in vector o, s and e are the starting and end positions of the 2nd vector
+    void VectorProjectOnto (float a_X1, float a_Y1, float a_Z1, float a_X2, float a_Y2, float a_Z2, float a_sX, float a_sY, float a_sZ, float a_eX, float a_eY, float a_eZ, float & o_X, float & o_Y, float & o_Z);
+    void VectorProjectOnto (float a_X1, float a_Y1, float a_X2, float a_Y2, float a_sX, float a_sY, float a_eX, float a_eY, float & o_X, float & o_Y);
 }

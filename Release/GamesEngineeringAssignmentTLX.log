@@ -1,13 +1,12 @@
 ﻿  CollisionSystem.cpp
 CollisionSystem.cpp(10): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-CollisionSystem.cpp(164): warning C4244: '-=': conversion from 'float' to 'int', possible loss of data
-CollisionSystem.cpp(286): warning C4018: '<': signed/unsigned mismatch
-CollisionSystem.cpp(321): warning C4018: '<': signed/unsigned mismatch
+CollisionSystem.cpp(166): warning C4244: '-=': conversion from 'float' to 'int', possible loss of data
   GamesEngineeringAssignmentTLX.cpp
-GamesEngineeringAssignmentTLX.cpp(222): warning C4018: '<': signed/unsigned mismatch
+GamesEngineeringAssignmentTLX.cpp(228): warning C4018: '<': signed/unsigned mismatch
   Utilities.cpp
 Utilities.cpp(21): warning C4244: 'return': conversion from '__int64' to 'long', possible loss of data
   Generating code
+c:\users\krisr\developer\gamesengineeringassignmenttlx\gamesengineeringassignmenttlx.cpp(146): warning C4700: uninitialized local variable 'i' used
   Finished generating code
 TL-Engine2015.lib(TL-Engine.obj) : warning LNK4099: PDB 'TL-Engine.pdb' was not found with 'TL-Engine2015.lib(TL-Engine.obj)' or at 'C:\Users\krisr\Developer\GamesEngineeringAssignmentTLX\TL-Engine.pdb'; linking object as if no debug info
 TL-Engine2015.lib(MSDefines.obj) : warning LNK4099: PDB 'TLX-Common.pdb' was not found with 'TL-Engine2015.lib(MSDefines.obj)' or at 'C:\Users\krisr\Developer\GamesEngineeringAssignmentTLX\TLX-Common.pdb'; linking object as if no debug info
