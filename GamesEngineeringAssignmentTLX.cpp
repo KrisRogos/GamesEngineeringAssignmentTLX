@@ -11,61 +11,27 @@ const EKeyCode kg_KeyQuit = Key_Escape; // quit button
 // engine must be accessible to all functions
 I3DEngine* gp_Engine;
 
-#ifdef ENGINE_TLX
-// required for printing text in TLE
+// message struct allows for pooling messages for display
 struct SMsg {
-    std::string text;
-    KRCS::E_MessageType type;
-    float timer;
+    std::string text; // content
+    KRCS::E_MessageType type; // colour and severity
+    float timer; // used by TLE to know how long to show the message for
+    bool printed; // used by CONSOLE to know if this message was already displayed
 
     SMsg (std::string a_Text, KRCS::E_MessageType a_Type, float a_duration)
     {
         text = a_Text;
         type = a_Type;
         timer = a_duration;
+        printed = false;
     }
 };
-std::vector<SMsg*> g_Messages;
-#endif
+
+std::vector<SMsg*> g_Messages; // message pool
 
 void PrintText (std::string a_Message, KRCS::E_MessageType a_type, float a_duration = 2.5f)
 {
-#ifdef ENGINE_TLX
-
     g_Messages.emplace_back (new SMsg (a_Message, a_type, a_duration));
-
-#endif
-
-#ifdef ENGINE_CONSOLE
-
-    HANDLE  hConsole;
-    hConsole = GetStdHandle (STD_OUTPUT_HANDLE);
-
-    switch (a_type)
-    {
-    default:
-        break;
-    case KRCS::E_MessageType::E_Info:
-        SetConsoleTextAttribute (hConsole, 15);
-        std::cout << a_Message << '\n';
-        break;
-    case KRCS::E_MessageType::E_Warning:
-        SetConsoleTextAttribute (hConsole, 14);
-        std::cout << a_Message << '\n';
-        SetConsoleTextAttribute (hConsole, 15);
-        break;
-    case KRCS::E_MessageType::E_Error:
-        SetConsoleTextAttribute (hConsole, 12);
-        std::cout << a_Message << '\n';
-        SetConsoleTextAttribute (hConsole, 15);
-        break;
-    case KRCS::E_MessageType::E_Crit:
-        SetConsoleTextAttribute (hConsole, 192);
-        std::cout << a_Message << '\n';
-        SetConsoleTextAttribute (hConsole, 15);
-        break;
-    }
-#endif
 }
 
 // Based on the function provided my Laurent Noel
@@ -163,6 +129,46 @@ void main()
     {
         p_Collision->Run (PrintText, simulationTime);
 
+        // console output
+#ifdef ENGINE_CONSOLE
+        HANDLE  hConsole;
+        hConsole = GetStdHandle (STD_OUTPUT_HANDLE);
+
+        // print all text
+        for (int i = 0; i < g_Messages.size (); i++)
+        {
+            auto current = g_Messages[i];
+
+            if (!current->printed)
+            {
+                switch (current->type)
+                {
+                default:
+                    break;
+                case KRCS::E_MessageType::E_White:
+                    SetConsoleTextAttribute (hConsole, 15);
+                    std::cout << current->text << '\n';
+                    break;
+                case KRCS::E_MessageType::E_Yellow:
+                    SetConsoleTextAttribute (hConsole, 14);
+                    std::cout << current->text << '\n';
+                    SetConsoleTextAttribute (hConsole, 15);
+                    break;
+                case KRCS::E_MessageType::E_Red:
+                    SetConsoleTextAttribute (hConsole, 12);
+                    std::cout << current->text << '\n';
+                    SetConsoleTextAttribute (hConsole, 15);
+                    break;
+                }
+
+                current->printed = true;
+            }
+        }
+#ifndef ENGINE_TLX
+        // when TLX is not in use, remove the messages
+        g_Messages.clear ();
+#endif
+#endif
 
         // visual output in TLX
 #ifdef ENGINE_TLX
@@ -242,21 +248,18 @@ void main()
                 {
                 default:
                     break;
-                case KRCS::E_MessageType::E_Info:
+                case KRCS::E_MessageType::E_White:
                     p_Font->Draw (current->text, 11, 11 + i * fontSize, 0xff000000);
                     p_Font->Draw (current->text, 10, 10 + i * fontSize, 0xffeeeeee);
                     break;
-                case KRCS::E_MessageType::E_Warning:
+                case KRCS::E_MessageType::E_Yellow:
                     p_Font->Draw (current->text, 11, 11 + i * fontSize, 0xff000000);
                     p_Font->Draw (current->text, 10, 10 + i * fontSize, 0xffffff00);
                     break;
-                case KRCS::E_MessageType::E_Error:
-                    p_Font->Draw (current->text, 11, 11 + i * fontSize, 0xff000000);
-                    p_Font->Draw (current->text, 10, 10 + i * fontSize, 0xffff8800);
-                    break;
-                case KRCS::E_MessageType::E_Crit:
+                case KRCS::E_MessageType::E_Red:
                     p_Font->Draw (current->text, 11, 11 + i * fontSize, 0xff000000);
                     p_Font->Draw (current->text, 10, 10 + i * fontSize, 0xffff0000);
+                    break;
                     break;
                 }
             }

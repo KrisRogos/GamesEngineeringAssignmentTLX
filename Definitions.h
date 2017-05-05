@@ -24,8 +24,8 @@ namespace KRCS {
 #define TIME_STR " microseconds"
 
     const uint_fast8_t k_MaxBeams = 10; // maximum number of beams that can be seen at once
-    const uint_fast32_t k_CircleCount = 10; // number of circles to be simulated
-    const uint_fast32_t k_CircleLotSize = 10; // number of circles per thread, must be at least the same as CircleCount, CircleCount must be divisible by this with no reminder
+    const uint_fast32_t k_CircleCount = 80000; // number of circles to be simulated
+    const uint_fast32_t k_CircleLotSize = 1000; // number of circles per thread, must be at least the same as CircleCount, CircleCount must be divisible by this with no reminder
     const uint_fast8_t k_BeamWorkers = k_CircleCount / k_CircleLotSize; // amount of workers for beam resolution only
     const uint_fast8_t k_MoveWorkers = k_CircleCount / k_CircleLotSize; // amount of workers for animation only
 
@@ -37,16 +37,16 @@ namespace KRCS {
 
     const uint_fast32_t k_StartingLife = 100; // amount of life spheres and circles have at the start
 
-    const float k_GenerationLimitX = 10.0f; // positive world size in X, negative is calculated from this
-    const float k_GenerationLimitY = 10.0f; // positive world size in Y, negative is calculated from this
+    const float k_GenerationLimitX = 1000.0f; // positive world size in X, negative is calculated from this
+    const float k_GenerationLimitY = 1000.0f; // positive world size in Y, negative is calculated from this
 #ifdef SIMULATION_3D 
-    const float k_GenerationLimitZ = 10.0f; // positive world size in Z, negative is calculated from this
+    const float k_GenerationLimitZ = 1000.0f; // positive world size in Z, negative is calculated from this
 #endif
 
-    const float k_MovementLimitX = 11.0f; // limit of the movement, must be higher than the generation limit
-    const float k_MovementLimitY = 11.0f; // limit of the movement, must be higher than the generation limit
+    const float k_MovementLimitX = 1010.0f; // limit of the movement, must be higher than the generation limit
+    const float k_MovementLimitY = 1010.0f; // limit of the movement, must be higher than the generation limit
 #ifdef SIMULATION_3D
-    const float k_MovementLimitZ = 11.0f; // limit of the movement, must be higher than the generation limit
+    const float k_MovementLimitZ = 1010.0f; // limit of the movement, must be higher than the generation limit
 #endif
 
     const float k_VelociyLimitX = 5.0f; // positive velocity X limit, negative is calculated from this
@@ -57,9 +57,8 @@ namespace KRCS {
 
     enum class E_MessageType : uint_fast8_t
     {
-        E_Info, // generic message
-        E_Warning, // a resolvable issue
-        E_Error, // a non-critical error
-        E_Crit, // a critical error
+        E_White, // generic white message
+        E_Yellow, // generic yellow message
+        E_Red, // generic red message
     };
 }

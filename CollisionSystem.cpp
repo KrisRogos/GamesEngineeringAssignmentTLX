@@ -63,7 +63,7 @@ namespace KRCS {
 
         // display the time it took to start the process
         auto timeEnd = GetNow();
-        fnp_Print ("The collider is ready to use after: " + GetDurationStr(timeStart, timeEnd) + TIME_STR + " with " + std::to_string(k_CircleCount) + " circles", E_MessageType::E_Info, 5.0f);
+        fnp_Print ("The collider is ready to use after: " + GetDurationStr(timeStart, timeEnd) + TIME_STR + " with " + std::to_string(k_CircleCount) + " circles", E_MessageType::E_White, 5.0f);
     }
 
     void CollisionSystem::Run (void (*fnp_Print)(std::string a_Message, E_MessageType a_Type, float a_duration), float a_DeltaTime)
@@ -74,7 +74,7 @@ namespace KRCS {
             // is it time for a laser to fire
             if (GetDurationLng (timeLastLaser, timeStart) >= TIME_SECOND * k_LaserTimer)
             {
-                fnp_Print (std::to_string(GetDurationLng (timeBegin, timeStart)/TIME_SECOND) + ": Laser fired", E_MessageType::E_Info, 2.5f);
+                fnp_Print (std::to_string(GetDurationLng (timeBegin, timeStart)/TIME_SECOND) + ": Laser fired", E_MessageType::E_White, 2.5f);
                 timeLastLaser = std::chrono::high_resolution_clock::now ();
 
                 // find an empty laser
@@ -168,18 +168,18 @@ namespace KRCS {
                         // is the sphere dead
                         if (mr_Circles[best_sphere].life <= 0)
                         {
-                            fnp_Print ("Collided with sphere: " + std::to_string (best_sphere) + " it now died", E_MessageType::E_Error, 2.5f);
+                            fnp_Print ("Collided with sphere: " + std::to_string (best_sphere) + " it now died", E_MessageType::E_Red, 2.5f);
                         }
                         else
                         {
-                            fnp_Print ("Collided with sphere: " + std::to_string (best_sphere) + " remaining hp: " + std::to_string (mr_Circles[best_sphere].life), E_MessageType::E_Warning, 2.5f);
+                            fnp_Print ("Collided with sphere: " + std::to_string (best_sphere) + " remaining hp: " + std::to_string (mr_Circles[best_sphere].life), E_MessageType::E_Yellow, 2.5f);
                         }
-                        fnp_Print ("Resolved with " + std::to_string (k_BeamWorkers) + " threads in " + GetDurationStr (timeStart, timeEnd) + TIME_STR, E_MessageType::E_Info, 2.5f);
+                        fnp_Print ("Resolved with " + std::to_string (k_BeamWorkers) + " threads in " + GetDurationStr (timeStart, timeEnd) + TIME_STR, E_MessageType::E_White, 2.5f);
                     }
                     else
                     {
-                        fnp_Print ("All collisions avoided", E_MessageType::E_Warning, 2.5f);
-                        fnp_Print ("Resolved with " + std::to_string (k_BeamWorkers) + " threads in " + GetDurationStr (timeStart, timeEnd) + TIME_STR, E_MessageType::E_Info, 2.5f);
+                        fnp_Print ("All collisions avoided", E_MessageType::E_Yellow, 2.5f);
+                        fnp_Print ("Resolved with " + std::to_string (k_BeamWorkers) + " threads in " + GetDurationStr (timeStart, timeEnd) + TIME_STR, E_MessageType::E_White, 2.5f);
                     }
                 }
 
